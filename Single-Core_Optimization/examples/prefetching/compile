@@ -1,0 +1,14 @@
+
+
+# build without prefetching
+#
+taskset -c $ID_OF_A_PERFORMANT_CORE gcc -O3 -march=native -mtune=native -o prefetching.prf_off prefetching.builtin.c
+
+# build with prefetching of the possible two "mid" elements+
+#
+taskset -c $ID_OF_A_PERFORMANT_CORE gcc -DPREFETCHING_ENABLED -O3 -march=native -mtune=native -o prefetching.prf_on prefetching.builtin.c
+
+
+# build with prefetching of the possible two "mid" elements + the 4th next "mid"elements
+#
+taskset -c $ID_OF_A_PERFORMANT_CORE gcc -DPREFETCHING_ENABLED2 -O3 -march=native -mtune=native -o prefetching.prf2_on prefetching.builtin.c
