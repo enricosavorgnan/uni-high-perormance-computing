@@ -39,10 +39,10 @@ typedef unsigned long long int idx_t;
 #define CPU_TIME ({struct timespec ts; clock_gettime( CLOCK_PROCESS_CPUTIME_ID, &ts ), \
 					 (double)ts.tv_sec + (double)ts.tv_nsec * 1e-9;})
 
+/*
+extern inline void transpose ( int, idx_t, idx_t, const data_t * restrict * restrict, data_t * restrict * restrict );
 
-extern inline void transpose ( int, idx_t, idx_t, data_t **, data_t ** );
-
-inline void transpose ( int mode, idx_t nrows, idx_t ncols, data_t **M, data_t **T )
+inline void transpose ( int mode, idx_t nrows, idx_t ncols, const data_t * restrict * restrict M, data_t * restrict * restrict T )
 {
   switch ( mode )
     {
@@ -58,7 +58,7 @@ inline void transpose ( int mode, idx_t nrows, idx_t ncols, data_t **M, data_t *
   
   return; 
 }
-
+*/
 
 
 /*
@@ -96,13 +96,13 @@ int main(int argc, char **argv)
   /*
    * allocate the memory
    */
-  data_t **matrix  = (data_t**)malloc( (nrows+ncols)*sizeof(data_t*) );    // the original matrix
-  data_t **tmatrix = matrix + nrows;                                       // the transposed matrix
+  data_t * restrict * restrict matrix  = (data_t**)malloc( nrows*sizeof(data_t*) );    // the original matrix
+  data_t * restrict * restrict tmatrix = (data_t**)malloc( ncols*sizeof(data_t*) );    // the transposed matrix
 
   /*
    * set-up the pointers that represent the matrix
    */  
-  data_t *all      = (data_t*)calloc( 2*nrows*ncols, sizeof(data_t) );
+  data_t * restrict all      = (data_t*)calloc( 2*nrows*ncols, sizeof(data_t) );
   for ( idx_t i = 0; i < nrows; i++ )
     matrix[i]  = all + i*ncols;
   
@@ -254,8 +254,9 @@ int main(int argc, char **argv)
  #endif
 
 
-  free ( all );
-  free ( matrix );
+  free ( (void*)all );
+  free ( (void*)matrix );
+  free ( (void*)tmatrix );
   
   return 0;
 }

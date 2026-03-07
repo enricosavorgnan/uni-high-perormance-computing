@@ -30,8 +30,8 @@ typedef unsigned int data_t;
 
 #endif
 
-#define COLUMNS_DFLT 128LLU
-#define ROWS_DFLT    128LLU
+#define COLUMNS_DFLT 1024LLU
+#define ROWS_DFLT    1024LLU
 #define BLOCKSIZE_DFLT 64
 
 typedef unsigned long long int idx_t;
@@ -76,8 +76,8 @@ int main(int argc, char **argv)
   /*
    * allocate the memory
    */
-  data_t (* matrix)[ncols]  = calloc( nrows, sizeof( *matrix  ) ); // the original matrix
-  data_t (* tmatrix)[nrows] = calloc( nrows , sizeof( *tmatrix ) ); // the transposed matrix
+  data_t (* restrict matrix)[ncols]  = calloc( nrows, sizeof( *matrix  ) );  // the original matrix
+  data_t (* restrict tmatrix)[nrows] = calloc( nrows , sizeof( *tmatrix ) ); // the transposed matrix
   
   int half_datat = (sizeof(data_t)*4);                               // the number of bits for half
 								     // of the data type (that is used

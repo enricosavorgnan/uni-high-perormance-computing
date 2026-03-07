@@ -76,8 +76,8 @@ int main(int argc, char **argv)
   /*
    * allocate the memory
    */
-  data_t *matrix  = (data_t*) calloc(2 * nrows*ncols, sizeof(data_t)); // the original matrix
-  data_t *tmatrix = matrix + (nrows*ncols);                            // the transposed matrix
+  data_t * restrict matrix  = (data_t*) calloc( nrows*ncols, sizeof(data_t)); // the original matrix
+  data_t * restrict tmatrix = (data_t*) calloc( nrows*ncols, sizeof(data_t)); // the transposed matrix
 
 
   int half_datat = (sizeof(data_t)*4);                               // the number of bits for half
@@ -223,7 +223,7 @@ int main(int argc, char **argv)
  #endif
 
   
-  free ( matrix );
-  
+  free ( (void*)matrix );
+  free ( (void*)tmatrix );
   return 0;
 }

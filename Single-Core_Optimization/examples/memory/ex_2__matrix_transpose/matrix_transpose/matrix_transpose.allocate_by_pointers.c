@@ -80,7 +80,7 @@ double **allocate_matrix( int N )
 }
 
 
-void transpose_strided_write( double **matrix, double **tmatrix, int N )
+void transpose_strided_write( const double * restrict * restrict matrix, double * restrict * restrict tmatrix, int N )
 {
   for (int r = 0; r < N; r++)
     for ( int c = 0; c < N; c++ )
@@ -89,7 +89,7 @@ void transpose_strided_write( double **matrix, double **tmatrix, int N )
 }
 
 
-void transpose_contiguous_write( double **matrix, double **tmatrix, int N )
+void transpose_contiguous_write( const double * restrict * restrict matrix, double * restrict * restrict tmatrix, int N )
 {
   for (int r = 0; r < N; r++)
     for ( int c = 0; c < N; c++ )
@@ -116,8 +116,8 @@ int main(int argc, char **argv)
   int     avoid_pwr2    = (argc > 2 ? (atoi(*(argv+2))>0) : 1 );
   int     verbose_level = (argc > 3 ? atoi(*(argv+3)) : 0 );
   int     N, Nmax;
-  double  ** matrix;
-  double  ** tmatrix;
+  double  * restrict * restrict matrix;
+  double  * restrict * restrict tmatrix;
 
   if ( mode > 1 )
     {
@@ -176,7 +176,7 @@ int main(int argc, char **argv)
 	  PAPI_START_CNTR;
 	  
 	  double tstart = CPU_TIME;
-	  transpose_strided_write( matrix, tmatrix, _N_ ); 
+	  transpose_strided_write( (const double * restrict * restrict)matrix, tmatrix, _N_ ); 
 	  timing += CPU_TIME - tstart;
 	  
 	  PAPI_STOP_CNTR;
@@ -191,7 +191,7 @@ int main(int argc, char **argv)
 	  PAPI_START_CNTR;
 	  
 	  double tstart = CPU_TIME;	 
-	  transpose_contiguous_write( matrix, tmatrix, _N_ );	  
+	  transpose_contiguous_write( (const double * restrict * restrict)matrix, tmatrix, _N_ );	  
 	  timing += CPU_TIME - tstart;
 	  
 	  PAPI_STOP_CNTR; 

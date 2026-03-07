@@ -56,7 +56,7 @@ extern int TESTS_QUIET;
                                           (double)ts.tv_nsec * 1e-9;})
 
 #define STRIDED_WRITE 0
-#define STRIDED_READ  1
+#define CONTIGUOUS_WRITE  1
 
 char *mode_labels[2] = {"strided write", "contiguous write"};
 
@@ -71,7 +71,7 @@ char *mode_labels[2] = {"strided write", "contiguous write"};
 #define dprintf( L, ... ) { if (verbose_level >= (L) ) printf( __VA_ARGS__ ); }
 
 
-void transpose_strided_write( const double * matrix, double * tmatrix, int N )
+void transpose_strided_write( const double * restrict matrix, double * restrict tmatrix, int N )
 {
   for (int i = 0; i < N; i++) {
     int offset = i*N;
@@ -81,7 +81,7 @@ void transpose_strided_write( const double * matrix, double * tmatrix, int N )
 }
 
 
-void transpose_contiguous_write( const double * matrix, double * tmatrix, int N )
+void transpose_contiguous_write( const double * restrict matrix, double * restrict tmatrix, int N )
 {
   for (int i = 0; i < N; i++) {
     int offset = i*N;
@@ -109,7 +109,7 @@ int main(int argc, char **argv)
   int     avoid_pwr2    = (argc > 2 ? (atoi(*(argv+2))>0) : 1 );  
   int     verbose_level = (argc > 3 ? atoi(*(argv+3)) : 0 );
   int     N, Nmax;
-  double * array, * array_swap;
+  double * restrict array, * restrict array_swap;
 
   if ( mode > 1 )
     {
@@ -174,7 +174,7 @@ int main(int argc, char **argv)
 	    if( (nruns==1) || (cc > 0) )
 	      PAPI_ACC_CNTR(values);
 	  }
-      else  // STRIDED_READ
+      else  // CONTIGUOUS_WRITE
 	for (int cc = 0; cc < nruns; cc++)
 	  {
 	    PAPI_FLUSH;

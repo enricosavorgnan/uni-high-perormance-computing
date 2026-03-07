@@ -48,7 +48,7 @@
 #include <math.h>
 
 #define STRIDED_WRITE 0
-#define STRIDED_READ  1
+#define CONTIGUOUS_WRITE  1
 
 #define NRUNS    5               // NOTE: AT LEAST THIS MUST BE AT LEAST 2
 #if (NRUNS < 2)
@@ -74,7 +74,7 @@ double **allocate_matrix( int N )
 }
 
 
-void transpose_strided_write( double **matrix, double **tmatrix, int N )
+void transpose_strided_write( const double * restrict * restrict matrix, double * restrict * restrict tmatrix, int N )
 {
   for (int r = 0; r < N; r++)
     for ( int c = 0; c < N; c++ )
@@ -83,7 +83,7 @@ void transpose_strided_write( double **matrix, double **tmatrix, int N )
 }
 
 
-void transpose_contiguous_write( double **matrix, double **tmatrix, int N )
+void transpose_contiguous_write( const double * restrict * restrict matrix, double * restrict * restrict tmatrix, int N )
 {
   for (int r = 0; r < N; r++)
     for ( int c = 0; c < N; c++ )
@@ -93,11 +93,11 @@ void transpose_contiguous_write( double **matrix, double **tmatrix, int N )
 
 int main(int argc, char **argv)
 {
-  int     N             = (argc > 1 ? atoi(*(argv+1)) : 10000 );
-  int     mode          = (argc > 2 ? atoi(*(argv+2)) : STRIDED_WRITE );
+  int     mode          = (argc > 1 ? atoi(*(argv+1)) : STRIDED_WRITE );
+  int     N             = (argc > 2 ? atoi(*(argv+2)) : 10000 );  
 
-  double **matrix  = allocate_matrix( N );
-  double **tmatrix = allocate_matrix( N );
+  double * restrict * restrict matrix  = allocate_matrix( N );
+  double * restrict * restrict tmatrix = allocate_matrix( N );
 
   if ( (matrix == NULL) ||
        (tmatrix == NULL) )
@@ -106,25 +106,47 @@ int main(int argc, char **argv)
       exit(1);
     }
 
+  printf("tranposing a %d x %d matrix with %s\n", N, N,
+	 ( mode == STRIDED_WRITE ? "strided write" : "contiguous write") );
+  
   /* load the data in the highest cache level that fits */
   for (int i = 0, r = 0; r < N; r++)
     for ( int c = 0; c < N; c++, i++ ) {
       matrix[r][c]  = (double)i;
       tmatrix[r][c] = 0; }
   
-  double timing;
-            
+  double timing, timing_max;
+	 
   if ( mode == STRIDED_WRITE ) {
-    transpose_strided_write( matrix, tmatrix, N );
-    timing = CPU_TIME;
-    transpose_strided_write( matrix, tmatrix, N ); }
+    // warmup
+    transpose_strided_write( (const double * restrict * restrict)matrix, tmatrix, N );
+    
+    for ( int i = 0; i < NRUNS; i++ ) {
+      double this_timing = CPU_TIME;	
+      transpose_strided_write( (const double * restrict * restrict)matrix, tmatrix, N ); 
+      this_timing = CPU_TIME - this_timing;
+      if ( i == 0) timing_max = this_timing;
+      else timing_max = ( timing_max < this_timing ? this_timing : timing_max );
+      timing += this_timing;
+    }
+  }    
   else {  // STRIDED_READ
-    transpose_contiguous_write( matrix, tmatrix, N );
-    timing = CPU_TIME;
-    transpose_contiguous_write( matrix, tmatrix, N ); }
+    // warmup
+    transpose_contiguous_write( (const double * restrict * restrict)matrix, tmatrix, N );
 
-  timing = CPU_TIME - timing;
-  printf("timing: %g bw: %g\n", timing, N*N*sizeof(double)/timing/(1024.0*1024.0) );
+    for ( int i = 0; i < NRUNS; i++ ) {
+      double this_timing = CPU_TIME;	
+      transpose_contiguous_write( (const double * restrict * restrict)matrix, tmatrix, N );
+      this_timing = CPU_TIME - this_timing;
+      if ( i == 0) timing_max = this_timing;
+      else timing_max = ( timing_max < this_timing ? this_timing : timing_max );
+      timing += this_timing;
+    }
+  }
+    
+  timing = (timing - timing_max) / (NRUNS-1);
+  printf("timing (avg among %d shots): %g bw: %g\n", NRUNS-1,
+	 timing, N*N*sizeof(double)/timing/(1024.0*1024.0) );
   
   
   FILE *out = fopen("donotoptimizeout.dat", "w");
