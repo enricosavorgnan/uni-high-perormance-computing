@@ -20,7 +20,7 @@ giuliano.taffoni@inaf.it
 
 **Instructor:**
 
-Isac Pasianotto  
+Isac Pasianotto, Ph.D. candidate, Università di Trieste, Area di Ricerca, Trieste  
 isac.pasianotto@areasciencepark.it
 
 ---
